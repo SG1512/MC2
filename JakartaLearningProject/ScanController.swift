@@ -11,6 +11,7 @@ import AVKit
 import Vision
 import Photos
 
+
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     let identifierLabel: UILabel = {
@@ -20,14 +21,16 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-    
     var captured = false
-
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupIdentifierConfidenceLabel()
         startCamera()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        captured = false
     }
     
     fileprivate func setupIdentifierConfidenceLabel() {
@@ -40,7 +43,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     
     func startCamera() {
         let captureSession = AVCaptureSession()
-        captureSession.sessionPreset = .photo
+        captureSession.sessionPreset = .hd4K3840x2160
         
         guard let captureDevice = AVCaptureDevice.default(for: .video) else { return }
         guard let input = try? AVCaptureDeviceInput(device: captureDevice) else { return }
@@ -57,7 +60,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         captureSession.addOutput(dataOutput)
     }
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        //        print("Camera was able to capture a frame:", Date())
+    
         guard let pixelBuffer: CVPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         
         
@@ -68,11 +71,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             guard let results = finishedReq.results as? [VNClassificationObservation] else { return }
             guard let firstObservation = results.first else { return }
             
-//            print(firstObservation.identifier, firstObservation.confidence)
-            
             DispatchQueue.main.async {
                 if firstObservation.confidence >= 0.99{
-//                    let confidenceText = "\n \(Int(firstObservation.confidence * 100))% confidence"
                     switch firstObservation.identifier {
                     case "Café Batavia":
                         if !self.captured {
@@ -114,6 +114,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
                             self.performSegue(withIdentifier:"ancmuseum", sender: self)
                             print("berhasil")
                             self.captured = true
+                            
                         }
                         print(self.captured)
                     case "The Red Shop":
